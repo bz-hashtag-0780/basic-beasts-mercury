@@ -29,6 +29,8 @@ to be installed on your computer. Follow the [instructions](https://www.npmjs.co
 # Build, Deploy and Test
 Using a terminal (or command prompt), change to the folder containing the project files and type: `yarn start` This will run all the dev scripts in each project package.json.
 
+Run `yarn test` to run all unit tests for this project.
+
 
 
 ## File Locations
