@@ -5,801 +5,1127 @@ const ClipboardJS = require('clipboard');
 const BN = require('bn.js'); // Required for injected code
 const manifest = require('../manifest.json');
 const t = require('@onflow/types');
-const ipfsClient = require('ipfs-http-client');
-const bs58 = require('bs58');
-
 
 module.exports = class DappLib {
-
-      /*>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> NFT: PACK NFT  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
-
-  /********** Flow Token **********/
-
-  static async mintFlowTokens(data) {
-
-    let config = DappLib.getConfig();
-    let result = await Blockchain.post({
-      config: config,
-      roles: {
-        proposer: "0xf8d6e0586b0a20c7",
-      }
-    },
-      'flowtoken_mint_flow_tokens',
-      {
-        recipient: { value: data.recipient, type: t.Address },
-        amount: { value: data.amount, type: t.UFix64 }
-      }
-    );
-
-    return {
-      type: DappLib.DAPP_RESULT_TX_HASH,
-      label: 'Transaction Hash',
-      result: result.callData.transactionId
-    }
-  }
-
-  static async getFlowBalance(data) {
-
-    let config = DappLib.getConfig();
-    let result = await Blockchain.get({
-      config: config,
-      roles: {
-      }
-    },
-      'flowtoken_get_flow_balance',
-      {
-        account: { value: data.account, type: t.Address }
-      }
-    );
-
-    return {
-      type: DappLib.DAPP_RESULT_BIG_NUMBER,
-      label: 'Collectible Type',
-      result: result.callData
-    }
-  }
-
-  /********** NFT **********/
-
-  static async provisionNFTs(data) {
-
-    let config = DappLib.getConfig();
-    let result = await Blockchain.post({
-      config: config,
-      roles: {
-        proposer: data.account,
-      }
-    },
-      'nft_provision_nfts'
-    );
-
-    return {
-      type: DappLib.DAPP_RESULT_TX_HASH,
-      label: 'Transaction Hash',
-      result: result.callData.transactionId
-    }
-  }
-
-  static async transferNFT(data) {
-
-    let config = DappLib.getConfig();
-    let result = await Blockchain.post({
-      config: config,
-      roles: {
-        proposer: data.giver,
-      }
-    },
-      'nft_transfer_nft',
-      {
-        id: { value: parseInt(data.id), type: t.UInt64 },
-        recipient: { value: data.recipient, type: t.Address }
-      }
-    );
-
-    return {
-      type: DappLib.DAPP_RESULT_TX_HASH,
-      label: 'Transaction Hash',
-      result: result.callData.transactionId
-    }
-  }
-
-  static async getNFTsInCollection(data) {
-
-    let config = DappLib.getConfig();
-    let result = await Blockchain.get({
-      config: config,
-      roles: {
-      }
-    },
-      'nft_get_nfts_in_collection',
-      {
-        acct: { value: data.account, type: t.Address }
-      }
-    );
-
-    return {
-      type: DappLib.DAPP_RESULT_ARRAY,
-      label: 'Collectible Type',
-      result: result.callData
-    }
-  }
-
-  static async getNFTInfo(data) {
-
-    let config = DappLib.getConfig();
-    let result = await Blockchain.get({
-      config: config,
-      roles: {
-      }
-    },
-      'nft_get_nft_info',
-      {
-        acct: { value: data.account, type: t.Address },
-        id: { value: parseInt(data.id), type: t.UInt64 }
-      }
-    );
-
-    return {
-      type: DappLib.DAPP_RESULT_OBJECT,
-      label: 'Collectible Type',
-      result: result.callData
-    }
-  }
-
-  /********** Packs **********/
-
-  static async provisionPacks(data) {
-
-    let config = DappLib.getConfig();
-    let result = await Blockchain.post({
-      config: config,
-      roles: {
-        proposer: data.account,
-      }
-    },
-      'packs_provision_packs'
-    );
-
-    return {
-      type: DappLib.DAPP_RESULT_TX_HASH,
-      label: 'Transaction Hash',
-      result: result.callData.transactionId
-    }
-  }
-
-  static async addPackType(data) {
-
-    let folder = true;
-    let config = DappLib.getConfig();
-
-    config.ipfs = {
-      host: 'ipfs.infura.io',
-      protocol: 'https',
-      port: 5001
-    }
-
-    // Push files to IPFS
-    let ipfsResult = await DappLib.ipfsUpload(config, data.files, folder, (bytes) => {
-
-    });
-
-    let result = await Blockchain.post({
-      config: config,
-      roles: {
-        proposer: config.accounts[0]
-      }
-    },
-      'packs_add_pack_type',
-      {
-        packType: { value: parseInt(data.packType), type: t.UInt64 },
-        numberOfNFTs: { value: parseInt(data.numberOfNFTs), type: t.UInt64 },
-        ipfsHash: { value: ipfsResult[0].cid.string, type: t.String }
-      }
-    );
-    return {
-      type: DappLib.DAPP_RESULT_TX_HASH,
-      label: 'Transaction Hash',
-      result: result.callData.transactionId
-    }
-
-  }
-
-  static async mintPacks(data) {
-
-    let config = DappLib.getConfig();
-    let result = await Blockchain.post({
-      config: config,
-      roles: {
-        proposer: config.accounts[0],
-      }
-    },
-      'packs_mint_pack',
-      {
-        packType: { value: parseInt(data.packType), type: t.UInt64 },
-        numberOfPacks: { value: parseInt(data.numberOfPacks), type: t.UInt64 }
-      }
-    );
-    return {
-      type: DappLib.DAPP_RESULT_TX_HASH,
-      label: 'Transaction Hash',
-      result: result.callData.transactionId
-    }
-
-  }
-
-  static async transferPack(data) {
-
-    let config = DappLib.getConfig();
-    let result = await Blockchain.post({
-      config: config,
-      roles: {
-        proposer: data.giver,
-      }
-    },
-      'packs_transfer_pack',
-      {
-        id: { value: parseInt(data.id), type: t.UInt64 },
-        recipient: { value: data.recipient, type: t.Address }
-      }
-    );
-
-    return {
-      type: DappLib.DAPP_RESULT_TX_HASH,
-      label: 'Transaction Hash',
-      result: result.callData.transactionId
-    }
-  }
-
-  static async openPack(data) {
-
-    let config = DappLib.getConfig();
-    let result = await Blockchain.post({
-      config: config,
-      roles: {
-        proposer: config.accounts[0],
-      }
-    },
-      'packs_open_pack',
-      {
-        id: { value: parseInt(data.id), type: t.UInt64 },
-        recipient: { value: data.recipient, type: t.Address }
-      }
-    );
-
-    return {
-      type: DappLib.DAPP_RESULT_TX_HASH,
-      label: 'Transaction Hash',
-      result: result.callData.transactionId
-    }
-  }
-
-  static async getPackInfo(data) {
-
-    let config = DappLib.getConfig();
-    let result = await Blockchain.get({
-      config: config,
-      roles: {
-      }
-    },
-      'packs_get_pack_info',
-      {
-        id: { value: parseInt(data.id), type: t.UInt64 },
-        acct: { value: data.acct, type: t.Address }
-      }
-    );
-
-    return {
-      type: DappLib.DAPP_RESULT_OBJECT,
-      label: 'Pack Info',
-      result: result.callData
-    }
-  }
-
-  static async getPackTypeInfo(data) {
-
-    let config = DappLib.getConfig();
-
-    let result = await Blockchain.get({
-      config: config,
-      roles: {
-      }
-    },
-      'packs_get_pack_type_info',
-      {
-        packType: { value: parseInt(data.packType), type: t.UInt64 }
-      }
-    );
-
-    return {
-      type: DappLib.DAPP_RESULT_OBJECT,
-      label: 'Pack Type Info',
-      result: result.callData
-    }
-  }
-
-  static async getOwnedPacks(data) {
-    let config = DappLib.getConfig();
-    let result = await Blockchain.get({
-      config: config,
-      roles: {
-      }
-    },
-      'packs_get_owned_packs',
-      {
-        acct: { value: data.account, type: t.Address }
-      }
-    );
-
-    return {
-      type: DappLib.DAPP_RESULT_ARRAY,
-      label: 'Collectible Type',
-      result: result.callData
-    }
-  }
-
-  /********** Marketplace **********/
-
-  static async provisionMarketplace(data) {
-
-    let config = DappLib.getConfig();
-    let result = await Blockchain.post({
-      config: config,
-      roles: {
-        proposer: data.account,
-      }
-    },
-      'marketplace_provision_marketplace'
-    );
-
-    return {
-      type: DappLib.DAPP_RESULT_TX_HASH,
-      label: 'Transaction Hash',
-      result: result.callData.transactionId
-    }
-  }
-
-  static async listPacksForSale(data) {
-
-    let config = DappLib.getConfig();
-    let result = await Blockchain.post({
-      config: config,
-      roles: {
-        proposer: config.accounts[0],
-      }
-    },
-      "marketplace_list_packs_for_sale",
-      {
-        ids: { value: [4, 5], type: t.Array(t.UInt64) },
-        price: { value: data.price, type: t.UFix64 }
-      }
-    );
-    return {
-      type: DappLib.DAPP_RESULT_TX_HASH,
-      label: 'Transaction Hash',
-      result: result.callData.transactionId
-    }
-
-  }
-
-  static async getPacksAvailable(data) {
-
-    let config = DappLib.getConfig();
-    let result = await Blockchain.get({
-      config: config,
-      roles: {
-      }
-    },
-      'marketplace_get_packs_available',
-      {
-        admin: { value: config.accounts[0], type: t.Address }
-      }
-    );
-
-    return {
-      type: DappLib.DAPP_RESULT_OBJECT,
-      label: 'Pack ID | Price',
-      result: result.callData
-    }
-  }
-
-  static async buyPack(data) {
-
-    let config = DappLib.getConfig();
-    let result = await Blockchain.post({
-      config: config,
-      roles: {
-        proposer: data.recipient,
-      }
-    },
-      'marketplace_buy_pack',
-      {
-        id: { value: parseInt(data.id), type: t.UInt64 },
-        admin: { value: config.accounts[0], type: t.Address }
-      }
-    );
-
-    return {
-      type: DappLib.DAPP_RESULT_TX_HASH,
-      label: 'Transaction Hash',
-      result: result.callData.transactionId
-    }
-  }
-
-  /*
-    data - an object of key value pairs
-    ex. { number: 2, id: 15 }
-
-    types - an object that holds the type of the key 
-    and value using the FCL types
-    ex. { key: t.String, value: t.Int }
-  */
-  static formatFlowDictionary(data, types) {
-    let newData = []
-    let dataKeys = Object.keys(data)
-
-    for (let key of dataKeys) {
-      if (types.key.label.includes("Int")) key = parseInt(key)
-      else if (types.key == t.Bool) key = (key === 'true');
-
-      if (types.value.label.includes("Int")) data[key] = parseInt(data[key])
-      else if (types.value == t.Bool) data[key] = (data[key] === 'true');
-      newData.push({ key: key, value: data[key] })
-    }
-    return { value: newData, type: t.Dictionary(types) }
-  }
-
-  /*
-    data - an array of values
-    ex. ["Hello", "World", "!"]
+	/********** BASIC BEAST **********/
+
+	// 1 basicBeastSetupAccount
+	// calls transactions/basicbeast/setup_account.cdc
+	//
+	// signer/proposer/authorizer: data.signer
+	//
+	static async basicBeastSetupAccount(data) {
+		let result = await Blockchain.post(
+			{
+				config: DappLib.getConfig(),
+				roles: {
+					proposer: data.signer,
+				},
+			},
+			'basicbeast_setup_account'
+		);
+
+		return {
+			type: DappLib.DAPP_RESULT_TX_HASH,
+			label: 'Transaction Hash',
+			result: result.callData.transactionId,
+		};
+	}
+
+	// 2 basicBeastCreateEvolutionSet
+	// calls transactions/basicbeast/create_evolutionSet.cdc
+	//
+	// signer/proposer/authorizer: data.signer
+	//
+	static async basicBeastCreateEvolutionSet(data) {
+		let config = DappLib.getConfig();
+		let result = await Blockchain.post(
+			{
+				config: config,
+				roles: {
+					proposer: data.signer,
+				},
+			},
+			'basicbeast_create_evolutionSet',
+			{
+				setName: { value: data.setName, type: t.String },
+			}
+		);
+
+		return {
+			type: DappLib.DAPP_RESULT_TX_HASH,
+			label: 'Transaction Hash',
+			result: result.callData.transactionId,
+		};
+	}
+
+	// 3 basicBeastGetEvolutionSetName
+	// calls scripts/basicbeast/sets/get_setName.cdc
+	//
+	// signer/proposer/authorizer:
+	//
+	static async basicBeastGetEvolutionSetName(data) {
+		let result = await Blockchain.get(
+			{
+				config: DappLib.getConfig(),
+				roles: {},
+			},
+			'basicbeast_sets_get_evolutionSetName',
+			{
+				setID: { value: parseInt(data.setID), type: t.UInt32 },
+			}
+		);
+
+		return {
+			type: DappLib.DAPP_RESULT_STRING,
+			label: 'Evolution Set Name is',
+			result: result.callData,
+		};
+	}
+
+	// 4 basicBeastCreateBeastTemplate
+	// calls transactions/basicbeast/create_beastTemplate.cdc
+	//
+	// signer/proposer/authorizer: data.signer
+	//
+
+	static async basicBeastCreateBeastTemplate(data) {
+		let result = await Blockchain.post(
+			{
+				config: DappLib.getConfig(),
+				roles: {
+					proposer: data.signer,
+				},
+			},
+			'basicbeast_create_beastTemplate',
+			{
+				dexNumber: { value: parseInt(data.dexNumber), type: t.UInt32 },
+				name: { value: data.name, type: t.String },
+				image: { value: data.image, type: t.String },
+				description: { value: data.description, type: t.String },
+				rarity: { value: data.rarity, type: t.String },
+				skin: { value: data.skin, type: t.String },
+				starLevel: { value: parseInt(data.starLevel), type: t.UInt32 },
+				// help
+				asexual: { value: false, type: t.Bool },
+				ultimateSkill: { value: data.ultimateSkill, type: t.String },
+				basicSkills: DappLib.formatFlowArray(
+					data.basicSkills,
+					t.String
+				),
+				elements: DappLib.formatFlowDictionary(data.elements, {
+					key: t.String,
+					value: t.Bool,
+				}),
+				data: DappLib.formatFlowDictionary(data.data, {
+					key: t.String,
+					value: t.String,
+				}),
+			}
+		);
+
+		return {
+			type: DappLib.DAPP_RESULT_TX_HASH,
+			label: 'Transaction Hash',
+			result: result.callData.transactionId,
+		};
+	}
+
+	// 5 basicBeastGetBeastTemplate
+	// calls scripts/basicbeast/beastTemplates/get_beastTemplate.cdc
+	//
+	// signer/proposer/authorizer: data.signer
+	//
+	static async basicBeastGetBeastTemplate(data) {
+		let result = await Blockchain.get(
+			{
+				config: DappLib.getConfig(),
+				roles: {
+					proposer: data.signer,
+				},
+			},
+			'basicbeast_beastTemplates_get_beastTemplate',
+			{
+				beastTemplateID: {
+					value: parseInt(data.beastTemplateID),
+					type: t.UInt32,
+				},
+			}
+		);
+
+		console.log(result);
+
+		return {
+			type: DappLib.DAPP_RESULT_STRING,
+			label: 'Beast information',
+			result: result.callData,
+		};
+	}
+
+	// 6 basicBeastGetAllBeastTemplates
+	// calls scripts/basicbeast/beastTemplates/get_all_beastTemplates.cdc
+	//
+	// signer/proposer/authorizer: data.signer
+	//
+	static async basicBeastGetAllBeastTemplates(data) {
+		let result = await Blockchain.get(
+			{
+				config: DappLib.getConfig(),
+				roles: {
+					proposer: data.signer,
+				},
+			},
+			'basicbeast_beastTemplates_get_all_beastTemplates',
+			{}
+		);
+
+		console.log(result);
+
+		return {
+			type: DappLib.DAPP_RESULT_STRING,
+			label: 'Beast information',
+			result: result.callData,
+		};
+	}
+
+	// 7 basicBeastGetAllBeastTemplatesInAnEvolutionSet
+	// calls scripts/basicbeast/get_all_beastTemplates_in_an_evolutionSet.cdc
+	//
+	// signer/proposer/authorizer: data.signer
+	//
+	static async basicBeastGetAllBeastTemplatesInAnEvolutionSet(data) {
+		let result = await Blockchain.get(
+			{
+				config: DappLib.getConfig(),
+				roles: {
+					proposer: data.signer,
+				},
+			},
+			'basicbeast_get_all_beastTemplates_in_an_evolutionSet',
+			{}
+		);
+
+		console.log(result);
+
+		return {
+			type: DappLib.DAPP_RESULT_STRING,
+			label: 'Beast information',
+			result: result.callData,
+		};
+	}
+
+	// 8 basicBeastGetBeastTemplatesInEvolutionSet.cdc
+	// calls scripts/basicbeast/sets/get_beastTemplates_in_evolutionSet.cdc.cdc
+	//
+	// signer/proposer/authorizer: data.signer
+	//
+	static async basicBeastGetBeastTemplatesInEvolutionSet(data) {
+		let result = await Blockchain.get(
+			{
+				config: DappLib.getConfig(),
+				roles: {
+					proposer: data.signer,
+				},
+			},
+			'basicbeast_sets_get_beastTemplates_in_evolutionSet',
+			{
+				setID: { value: parseInt(data.setID), type: t.UInt32 },
+			}
+		);
+
+		console.log(result);
+
+		return {
+			type: DappLib.DAPP_RESULT_STRING,
+			label: 'Beast information',
+			result: result.callData,
+		};
+	}
+
+	// 9 basicBeastAddBeastTemplateToEvolutionSet
+	// calls transactions/basicbeast/add_beastTemplate_to_evolutionSet.cdc
+	//
+	// signer/proposer/authorizer: data.signer
+	//
+
+	static async basicBeastAddBeastTemplateToEvolutionSet(data) {
+		let result = await Blockchain.post(
+			{
+				config: DappLib.getConfig(),
+				roles: {
+					proposer: data.signer,
+				},
+			},
+			'basicbeast_add_beastTemplate_to_evolutionSet',
+			{
+				setID: { value: parseInt(data.setID), type: t.UInt32 },
+				beastTemplateID: {
+					value: parseInt(data.beastTemplateID),
+					type: t.UInt32,
+				},
+			}
+		);
+
+		return {
+			type: DappLib.DAPP_RESULT_TX_HASH,
+			label: 'Transaction Hash',
+			result: result.callData.transactionId,
+		};
+	}
+
+	// 10 basicBeastAddBeastTemplatesToEvolutionSet
+	// calls transactions/basicbeast/add_beastTemplates_to_evolutionSet.cdc
+	//
+	// signer/proposer/authorizer: data.signer
+	//
+
+	static async basicBeastAddBeastTemplatesToEvolutionSet(data) {
+		let result = await Blockchain.post(
+			{
+				config: DappLib.getConfig(),
+				roles: {
+					proposer: data.signer,
+				},
+			},
+			'basicbeast_add_beastTemplates_to_evolutionSet',
+			{
+				setID: { value: parseInt(data.setID), type: t.UInt32 },
+				beastTemplateID: DappLib.formatFlowArray(
+					data.beastTemplateID,
+					t.UInt32
+				),
+			}
+		);
+
+		return {
+			type: DappLib.DAPP_RESULT_TX_HASH,
+			label: 'Transaction Hash',
+			result: result.callData.transactionId,
+		};
+	}
+
+	// 11 basicBeastGetBeastTemplateEvolutionSet
+	// calls scripts/basicbeast/get_beastTemplate_evolutionSet.cdc
+	//
+	// signer/proposer/authorizer: data.signer
+	//
+
+	static async basicBeastGetBeastTemplateEvolutionSet(data) {
+		let result = await Blockchain.get(
+			{
+				config: DappLib.getConfig(),
+				roles: {
+					proposer: data.signer,
+				},
+			},
+			'basicbeast_get_beastTemplate_evolutionSet',
+			{
+				beastTemplateID: {
+					value: parseInt(data.beastTemplateID),
+					type: t.UInt32,
+				},
+			}
+		);
+
+		console.log(data.signer);
+
+		return {
+			type: DappLib.DAPP_RESULT_STRING,
+			label: 'setID',
+			result: result.callData,
+		};
+	}
+
+	// 12 basicBeastRemoveBeastTemplateFromEvolutionSet
+	// calls transactions/basicbeast/remove_beastTemplate_from_evolutionSet.cdc
+	//
+	// signer/proposer/authorizer: data.signer
+	//
+
+	static async basicBeastRemoveBeastTemplateFromEvolutionSet(data) {
+		let result = await Blockchain.post(
+			{
+				config: DappLib.getConfig(),
+				roles: {
+					proposer: data.signer,
+				},
+			},
+			'basicbeast_remove_beastTemplate_from_evolutionSet',
+			{
+				setID: { value: parseInt(data.setID), type: t.UInt32 },
+				beastTemplateID: {
+					value: parseInt(data.beastTemplateID),
+					type: t.UInt32,
+				},
+			}
+		);
+
+		return {
+			type: DappLib.DAPP_RESULT_TX_HASH,
+			label: 'Transaction Hash',
+			result: result.callData.transactionId,
+		};
+	}
+
+	// 13 basicBeastRemoveAllBeastTemplatesFromEvolutionSet
+	// calls transactions/basicbeast/remove_all_beastTemplates_from_evolutionSet.cdc
+	//
+	// signer/proposer/authorizer: data.signer
+	//
+
+	static async basicBeastRemoveAllBeastTemplatesFromEvolutionSet(data) {
+		let result = await Blockchain.post(
+			{
+				config: DappLib.getConfig(),
+				roles: {
+					proposer: data.signer,
+				},
+			},
+			'basicbeast_remove_all_beastTemplates_from_evolutionSet',
+			{
+				setID: { value: parseInt(data.setID), type: t.UInt32 },
+			}
+		);
+
+		return {
+			type: DappLib.DAPP_RESULT_TX_HASH,
+			label: 'Transaction Hash',
+			result: result.callData.transactionId,
+		};
+	}
+
+	// 14 basicBeastMintBeast
+	// calls transactions/basicbeast/mint_beast.cdc
+	//
+	// signer/proposer/authorizer: data.signer
+	//
+
+	static async basicBeastMintBeast(data) {
+		let result = await Blockchain.post(
+			{
+				config: DappLib.getConfig(),
+				roles: {
+					proposer: data.signer,
+				},
+			},
+			'basicbeast_mint_beast',
+			{
+				setID: { value: parseInt(data.setID), type: t.UInt32 },
+				beastTemplateID: {
+					value: parseInt(data.beastTemplateID),
+					type: t.UInt32,
+				},
+				matron: { value: parseInt(data.matron), type: t.UInt64 },
+				sire: { value: parseInt(data.sire), type: t.UInt64 },
+				evolvedFrom: DappLib.formatFlowArray(
+					data.evolvedFrom,
+					t.UInt64
+				),
+				recipientAddr: { value: data.recipientAddr, type: t.Address },
+			}
+		);
+
+		return {
+			type: DappLib.DAPP_RESULT_TX_HASH,
+			label: 'Transaction Hash',
+			result: result.callData.transactionId,
+		};
+	}
+
+	// 15 basicBeastBatchMintBeast
+	// calls transactions/basicbeast/batch_mint_beast.cdc
+	//
+	// signer/proposer/authorizer: data.signer
+	//
+
+	static async basicBeastBatchMintBeast(data) {
+		let result = await Blockchain.post(
+			{
+				config: DappLib.getConfig(),
+				roles: {
+					proposer: data.signer,
+				},
+			},
+			'basicbeast_batch_mint_beast',
+			{
+				setID: { value: parseInt(data.setID), type: t.UInt32 },
+				beastTemplateID: {
+					value: parseInt(data.beastTemplateID),
+					type: t.UInt32,
+				},
+				matron: { value: parseInt(data.matron), type: t.UInt64 },
+				sire: { value: parseInt(data.sire), type: t.UInt64 },
+				evolvedFrom: DappLib.formatFlowArray(
+					data.evolvedFrom,
+					t.UInt64
+				),
+				quantity: { value: parseInt(data.quantity), type: t.UInt64 },
+				recipientAddr: { value: data.recipientAddr, type: t.Address },
+			}
+		);
+
+		return {
+			type: DappLib.DAPP_RESULT_TX_HASH,
+			label: 'Transaction Hash',
+			result: result.callData.transactionId,
+		};
+	}
+
+	// 16 basicBeastGetTotalSupply
+	// calls scripts/basicbeast/get_totalSupply.cdc
+	//
+	// signer/proposer/authorizer: data.signer
+	//
+
+	static async basicBeastGetTotalSupply(data) {
+		let result = await Blockchain.get(
+			{
+				config: DappLib.getConfig(),
+				roles: {
+					proposer: data.signer,
+				},
+			},
+			'basicbeast_get_totalSupply',
+			{}
+		);
+
+		return {
+			type: DappLib.DAPP_RESULT_STRING,
+			label: 'Total minted Beast NFTs',
+			result: result.callData,
+		};
+	}
+
+	// 17 basicBeastGetCollectionOwnedBeastsIds
+	// calls scripts/basicbeast/collections/get_collection_owned_beasts_ids.cdc
+	//
+	// signer/proposer/authorizer: data.signer
+	//
+
+	static async basicBeastGetCollectionOwnedBeastsIds(data) {
+		let result = await Blockchain.get(
+			{
+				config: DappLib.getConfig(),
+				roles: {
+					proposer: data.signer,
+				},
+			},
+			'basicbeast_collections_get_collection_owned_beasts_ids',
+			{
+				account: { value: data.account, type: t.Address },
+			}
+		);
+
+		return {
+			type: DappLib.DAPP_RESULT_STRING,
+			label: 'The Collection s Beast NFTs',
+			result: result.callData,
+		};
+	}
+
+	// 18 basicBeastGetBeastIdInCollection
+	// calls scripts/basicbeast/collections/get_beast_id_in_Collection.cdc
+	//
+	// signer/proposer/authorizer: data.signer
+	//
+
+	static async basicBeastGetBeastIdInCollection(data) {
+		let result = await Blockchain.get(
+			{
+				config: DappLib.getConfig(),
+				roles: {
+					proposer: data.signer,
+				},
+			},
+			'basicbeast_collections_get_beast_id_in_Collection',
+			{
+				account: { value: data.account, type: t.Address },
+				id: { value: parseInt(data.id), type: t.UInt64 },
+			}
+		);
+
+		return {
+			type: DappLib.DAPP_RESULT_STRING,
+			label: 'The Collection s Beast NFTs',
+			result: result.callData,
+		};
+	}
+
+	// 19 basicBeastLockEvolutionSet
+	// calls transactions/basicbeast/lock_evolutionSet.cdc
+	//
+	// signer/proposer/authorizer: data.signer
+	//
+	static async basicBeastLockEvolutionSet(data) {
+		let result = await Blockchain.post(
+			{
+				config: DappLib.getConfig(),
+				roles: {
+					proposer: data.signer,
+				},
+			},
+			'basicbeast_lock_evolutionSet',
+			{
+				setID: { value: parseInt(data.setID), type: t.UInt32 },
+			}
+		);
+
+		return {
+			type: DappLib.DAPP_RESULT_TX_HASH,
+			label: 'Transaction Hash',
+			result: result.callData.transactionId,
+		};
+	}
+
+	// 20 basicBeastRetireBeastTemplateFromEvolutionSet
+	// calls transactions/basicbeast/retire_beastTemplate_from_evolutionSet.cdc
+	//
+	// signer/proposer/authorizer: data.signer
+	//
+	static async basicBeastRetireBeastTemplateFromEvolutionSet(data) {
+		let result = await Blockchain.post(
+			{
+				config: DappLib.getConfig(),
+				roles: {
+					proposer: data.signer,
+				},
+			},
+			'basicbeast_retire_beastTemplate_from_evolutionSet',
+			{
+				setID: { value: parseInt(data.setID), type: t.UInt32 },
+				beastTemplateID: {
+					value: parseInt(data.beastTemplateID),
+					type: t.UInt32,
+				},
+			}
+		);
+
+		return {
+			type: DappLib.DAPP_RESULT_TX_HASH,
+			label: 'Transaction Hash',
+			result: result.callData.transactionId,
+		};
+	}
+
+	// 21 basicBeastRetireAllBeastTemplatesFromEvolutionSet
+	// calls transactions/basicbeast/retire_all_beastTemplates_from_evolutionSet.cdc
+	//
+	// signer/proposer/authorizer: data.signer
+	//
+	static async basicBeastRetireAllBeastTemplatesFromEvolutionSet(data) {
+		let result = await Blockchain.post(
+			{
+				config: DappLib.getConfig(),
+				roles: {
+					proposer: data.signer,
+				},
+			},
+			'basicbeast_retire_all_beastTemplates_from_evolutionSet',
+			{
+				setID: { value: parseInt(data.setID), type: t.UInt32 },
+			}
+		);
+
+		return {
+			type: DappLib.DAPP_RESULT_TX_HASH,
+			label: 'Transaction Hash',
+			result: result.callData.transactionId,
+		};
+	}
+
+	// 22 basicBeastStartNewGeneration
+	// calls transactions/basicbeast/start_new_generation.cdc
+	//
+	// signer/proposer/authorizer: data.signer
+	//
+	static async basicBeastStartNewGeneration(data) {
+		let result = await Blockchain.post(
+			{
+				config: DappLib.getConfig(),
+				roles: {
+					proposer: data.signer,
+				},
+			},
+			'basicbeast_start_new_generation',
+			{}
+		);
+
+		return {
+			type: DappLib.DAPP_RESULT_TX_HASH,
+			label: 'Transaction Hash',
+			result: result.callData.transactionId,
+		};
+	}
+
+	// 23 basicBeastGetCurrentGeneration
+	// calls scripts/basicbeast/get_currentGeneration.cdc
+	//
+	// signer/proposer/authorizer: data.signer
+	//
+	static async basicBeastGetCurrentGeneration(data) {
+		let result = await Blockchain.get(
+			{
+				config: DappLib.getConfig(),
+				roles: {
+					proposer: data.signer,
+				},
+			},
+			'basicbeast_get_currentGeneration',
+			{}
+		);
+
+		return {
+			type: DappLib.DAPP_RESULT_BIG_NUMBER,
+			label: 'The current generation is',
+			result: result.callData,
+		};
+	}
+
+	// 24 basicBeastDepositBeastNft
+	// calls transactions/basicbeast/deposit_beast_nft.cdc
+	//
+	// signer/proposer/authorizer: data.signer
+	//
+	static async basicBeastDepositBeastNft(data) {
+		let result = await Blockchain.post(
+			{
+				config: DappLib.getConfig(),
+				roles: {
+					proposer: data.signer,
+				},
+			},
+			'basicbeast_deposit_beast_nft',
+			{
+				recipientAddr: { value: data.recipientAddr, type: t.Address },
+				beastID: { value: parseInt(data.beastID), type: t.UInt64 },
+			}
+		);
+
+		return {
+			type: DappLib.DAPP_RESULT_TX_HASH,
+			label: 'Transaction Hash',
+			result: result.callData.transactionId,
+		};
+	}
+
+	// 25 basicBeastDepositBeastNfts
+	// calls transactions/basicbeast/deposit_beast_nfts.cdc
+	//
+	// signer/proposer/authorizer: data.signer
+	//
+	static async basicBeastDepositBeastNfts(data) {
+		let result = await Blockchain.post(
+			{
+				config: DappLib.getConfig(),
+				roles: {
+					proposer: data.signer,
+				},
+			},
+			'basicbeast_deposit_beast_nfts',
+			{
+				recipientAddr: { value: data.recipientAddr, type: t.Address },
+				beastIDs: DappLib.formatFlowArray(data.beastIDs, t.UInt64),
+			}
+		);
+
+		return {
+			type: DappLib.DAPP_RESULT_TX_HASH,
+			label: 'Transaction Hash',
+			result: result.callData.transactionId,
+		};
+	}
+
+	// 26 basicBeastGetEvolutionSetData
+	// calls scripts/basicbeast/sets/get_evolutionSetData.cdc
+	//
+	// signer/proposer/authorizer: data.signer
+	//
+	static async basicBeastGetEvolutionSetData(data) {
+		let result = await Blockchain.get(
+			{
+				config: DappLib.getConfig(),
+				roles: {
+					proposer: data.signer,
+				},
+			},
+			'basicbeast_sets_get_evolutionSetData',
+			{
+				setID: { value: parseInt(data.setID), type: t.UInt32 },
+			}
+		);
+
+		console.log(result);
+
+		return {
+			type: DappLib.DAPP_RESULT_BIG_NUMBER,
+			label: 'The current generation is',
+			result: result.callData,
+		};
+	}
+
+	/*
+      data - an object of key value pairs
+      ex. { number: 2, id: 15 }
+
+      types - an object that holds the type of the key 
+      and value using the FCL types
+      ex. { key: t.String, value: t.Int }
+    */
+	static formatFlowDictionary(data, types) {
+		let newData = [];
+		let dataKeys = Object.keys(data);
+
+		for (let key of dataKeys) {
+			if (types.key.label.includes('Int')) key = parseInt(key);
+			else if (types.key == t.Bool) key = key === 'true';
+
+			if (types.value.label.includes('Int'))
+				data[key] = parseInt(data[key]);
+			else if (types.value == t.Bool) data[key] = data[key] === 'true';
+			newData.push({ key: key, value: data[key] });
+		}
+		return { value: newData, type: t.Dictionary(types) };
+	}
+
+	/*
+      data - an array of values
+      ex. ["Hello", "World", "!"]
   
-    type - the type of the values using the FCL type
-    ex. t.String
-  */
-  static formatFlowArray(data, type) {
-    if (type == t.String) return { value: data, type: t.Array(type) }
+      type - the type of the values using the FCL type
+      ex. t.String
+    */
+	static formatFlowArray(data, type) {
+		if (type == t.String) return { value: data, type: t.Array(type) };
 
-    let newData = []
-    for (let element of data) {
-      if (type.label.includes("Int")) element = parseInt(element)
-      else if (type == t.Bool) element = (element === 'true');
+		let newData = [];
+		for (let element of data) {
+			if (type.label.includes('Int')) element = parseInt(element);
+			else if (type == t.Bool) element = element === 'true';
 
-      newData.push(element)
-    }
-    return { value: newData, type: t.Array(type) }
-  }
+			newData.push(element);
+		}
+		return { value: newData, type: t.Array(type) };
+	}
 
-  static async ipfsUpload(config, files, wrapWithDirectory, progressCallback) {
+	/*>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> DAPP LIBRARY  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
 
-    let results = [];
-    if (files.length < 1) {
-      return results;
-    }
-    let ipfs = ipfsClient(config.ipfs);
-    let filesToUpload = [];
-    files.map((file) => {
-      filesToUpload.push({
-        path: file.name,
-        content: file
-      })
-    });
-    const options = {
-      wrapWithDirectory: wrapWithDirectory,
-      pin: true,
-      progress: progressCallback
-    }
+	static get DAPP_STATE_CONTRACT() {
+		return 'dappStateContract';
+	}
+	static get DAPP_CONTRACT() {
+		return 'dappContract';
+	}
 
-    for await (const result of ipfs.add(filesToUpload, options)) {
-      if (wrapWithDirectory && result.path !== "") {
-        continue;
-      }
-      results.push(
-        Object.assign({}, result, DappLib._decodeMultihash(result.cid.string))
-      );
-    }
+	static get DAPP_STATE_CONTRACT_WS() {
+		return 'dappStateContractWs';
+	}
+	static get DAPP_CONTRACT_WS() {
+		return 'dappContractWs';
+	}
 
-    return results;
-  }
+	static get DAPP_RESULT_BIG_NUMBER() {
+		return 'big-number';
+	}
 
-  static formatIpfsHash(a) {
-    let config = DappLib.getConfig();
-    let url = `${config.ipfs.protocol}://${config.ipfs.host}/ipfs/${a}`;
-    return `<strong class="teal lighten-5 p-1 black-text number copy-target" title="${url}"><a href="${url}" target="_new">${a.substr(0, 6)}...${a.substr(a.length - 4, 4)}</a></strong>${DappLib.addClippy(a)}`;
-  }
+	static get DAPP_RESULT_ACCOUNT() {
+		return 'account';
+	}
 
-  /**
-   * Partition multihash string into object representing multihash
-   * https://github.com/saurfang/ipfs-multihash-on-solidity/blob/master/src/multihash.js
-   */
-  static _decodeMultihash(multihash) {
-    const decoded = bs58.decode(multihash);
+	static get DAPP_RESULT_TX_HASH() {
+		return 'tx-hash';
+	}
 
-    return {
-      digest: `0x${decoded.slice(2).toString('hex')}`,
-      hashFunction: decoded[0],
-      digestLength: decoded[1],
-    };
-  }
+	static get DAPP_RESULT_IPFS_HASH_ARRAY() {
+		return 'ipfs-hash-array';
+	}
 
+	static get DAPP_RESULT_SIA_HASH_ARRAY() {
+		return 'sia-hash-array';
+	}
 
+	static get DAPP_RESULT_ARRAY() {
+		return 'array';
+	}
 
+	static get DAPP_RESULT_OBJECT() {
+		return 'object';
+	}
 
-    /*>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> DAPP LIBRARY  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
+	static get DAPP_RESULT_STRING() {
+		return 'string';
+	}
 
-    static get DAPP_STATE_CONTRACT() {
-        return 'dappStateContract'
-    }
-    static get DAPP_CONTRACT() {
-        return 'dappContract'
-    }
+	static get DAPP_RESULT_ERROR() {
+		return 'error';
+	}
 
-    static get DAPP_STATE_CONTRACT_WS() {
-        return 'dappStateContractWs'
-    }
-    static get DAPP_CONTRACT_WS() {
-        return 'dappContractWs'
-    }
+	static async addEventHandler(contract, event, params, callback) {
+		Blockchain.handleEvent(
+			{
+				config: DappLib.getConfig(),
+				contract: contract,
+				params: params || {},
+			},
+			event,
+			(error, result) => {
+				if (error) {
+					callback({
+						event: event,
+						type: DappLib.DAPP_RESULT_ERROR,
+						label: 'Error Message',
+						result: error,
+					});
+				} else {
+					callback({
+						event: event,
+						type: DappLib.DAPP_RESULT_OBJECT,
+						label: 'Event ' + event,
+						result: DappLib.getObjectNamedProperties(result),
+					});
+				}
+			}
+		);
+	}
 
-    static get DAPP_RESULT_BIG_NUMBER() {
-        return 'big-number'
-    }
+	static getTransactionHash(t) {
+		if (!t) {
+			return '';
+		}
+		let value = '';
+		if (typeof t === 'string') {
+			value = t;
+		} else if (typeof t === 'object') {
+			if (t.hasOwnProperty('transactionHash')) {
+				value = t.transactionHash; // Ethereum
+			} else {
+				value = JSON.stringify(t);
+			}
+		}
+		return value;
+	}
 
-    static get DAPP_RESULT_ACCOUNT() {
-        return 'account'
-    }
+	static formatHint(hint) {
+		if (hint) {
+			return `<p class="mt-3 grey-text"><strong>Hint:</strong> ${hint}</p>`;
+		} else {
+			return '';
+		}
+	}
 
-    static get DAPP_RESULT_TX_HASH() {
-        return 'tx-hash'
-    }
+	static formatNumber(n) {
+		var parts = n.toString().split('.');
+		parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+		return `<strong class="p-1 blue-grey-text number copy-target" style="font-size:1.1rem;" title="${n}">${parts.join(
+			'.'
+		)}</strong>`;
+	}
 
-    static get DAPP_RESULT_IPFS_HASH_ARRAY() {
-        return 'ipfs-hash-array'
-    }
+	static formatAccount(a) {
+		return `<strong class="green accent-1 p-1 blue-grey-text number copy-target" title="${a}">${DappLib.toCondensed(
+			a,
+			6,
+			4
+		)}</strong>${DappLib.addClippy(a)}`;
+	}
 
-    static get DAPP_RESULT_SIA_HASH_ARRAY() {
-        return 'sia-hash-array'
-    }
+	static formatTxHash(a) {
+		let value = DappLib.getTransactionHash(a);
+		return `<strong class="teal lighten-5 p-1 blue-grey-text number copy-target" title="${value}">${DappLib.toCondensed(
+			value,
+			6,
+			4
+		)}</strong>${DappLib.addClippy(value)}`;
+	}
 
-    static get DAPP_RESULT_ARRAY() {
-        return 'array'
-    }
+	static formatBoolean(a) {
+		return a ? 'YES' : 'NO';
+	}
 
-    static get DAPP_RESULT_OBJECT() {
-        return 'object'
-    }
+	static formatText(a, copyText) {
+		if (!a) {
+			return;
+		}
+		if (a.startsWith('<')) {
+			return a;
+		}
+		return `<span class="copy-target" title="${
+			copyText ? copyText : a
+		}">${a}</span>${DappLib.addClippy(copyText ? copyText : a)}`;
+	}
 
-    static get DAPP_RESULT_STRING() {
-        return 'string'
-    }
+	static formatStrong(a) {
+		return `<strong>${a}</strong>`;
+	}
 
-    static get DAPP_RESULT_ERROR() {
-        return 'error'
-    }
+	static formatPlain(a) {
+		return a;
+	}
 
-    static async addEventHandler(contract, event, params, callback) {
-        Blockchain.handleEvent({
-            config: DappLib.getConfig(),
-            contract: contract,
-            params: params || {}
-        },
-            event,
-            (error, result) => {
-                if (error) {
-                    callback({
-                        event: event,
-                        type: DappLib.DAPP_RESULT_ERROR,
-                        label: 'Error Message',
-                        result: error
-                    });
-                } else {
-                    callback({
-                        event: event,
-                        type: DappLib.DAPP_RESULT_OBJECT,
-                        label: 'Event ' + event,
-                        result: DappLib.getObjectNamedProperties(result)
-                    });
-                }
-            }
-        );
-    }
+	static formatObject(a) {
+		let data = [];
+		let labels = ['Item', 'Value'];
+		let keys = ['item', 'value'];
+		let formatters = ['Strong', 'Text-20-5']; // 'Strong': Bold, 'Text-20-5': Compress a 20 character long string down to 5
+		let reg = new RegExp('^\\d+$'); // only digits
+		for (let key in a) {
+			if (!reg.test(key)) {
+				data.push({
+					item: key.substr(0, 1).toUpperCase() + key.substr(1),
+					value: a[key],
+				});
+			}
+		}
+		return DappLib.formatArray(data, formatters, labels, keys);
+	}
 
-    static getTransactionHash(t) {
-        if (!t) { return ''; }
-        let value = '';
-        if (typeof t === 'string') {
-            value = t;
-        } else if (typeof t === 'object') {
-            if (t.hasOwnProperty('transactionHash')) {
-                value = t.transactionHash;       // Ethereum                
-            } else {
-                value = JSON.stringify(t);
-            }
-        }
-        return value;
-    }
+	static formatArray(h, dataFormatters, dataLabels, dataKeys) {
+		let output = '<table class="table table-striped">';
 
-    static formatHint(hint) {
-        if (hint) {
-            return `<p class="mt-3 grey-text"><strong>Hint:</strong> ${hint}</p>`;
-        } else {
-            return '';
-        }
-    }
+		if (dataLabels) {
+			output += '<thead><tr>';
+			for (let d = 0; d < dataLabels.length; d++) {
+				output += `<th scope="col">${dataLabels[d]}</th>`;
+			}
+			output += '</tr></thead>';
+		}
+		output += '<tbody>';
+		h.map((item) => {
+			output += '<tr>';
+			for (let d = 0; d < dataFormatters.length; d++) {
+				let text = String(
+					dataKeys && dataKeys[d] ? item[dataKeys[d]] : item
+				);
+				let copyText =
+					dataKeys && dataKeys[d] ? item[dataKeys[d]] : item;
+				if (text.startsWith('<')) {
+					output +=
+						(d == 0 ? '<th scope="row">' : '<td>') +
+						text +
+						(d == 0 ? '</th>' : '</td>');
+				} else {
+					let formatter = 'format' + dataFormatters[d];
+					if (formatter.startsWith('formatText')) {
+						let formatterFrags = formatter.split('-');
+						if (formatterFrags.length === 3) {
+							text = DappLib.toCondensed(
+								text,
+								Number(formatterFrags[1]),
+								Number(formatterFrags[2])
+							);
+						} else if (formatterFrags.length === 2) {
+							text = DappLib.toCondensed(
+								text,
+								Number(formatterFrags[1])
+							);
+						}
+						formatter = formatterFrags[0];
+					}
+					output +=
+						(d == 0 ? '<th scope="row">' : '<td>') +
+						DappLib[formatter](text, copyText) +
+						(d == 0 ? '</th>' : '</td>');
+				}
+			}
+			output += '</tr>';
+		});
+		output += '</tbody></table>';
+		return output;
+	}
 
-    static formatNumber(n) {
-        var parts = n.toString().split(".");
-        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-        return `<strong class="p-1 blue-grey-text number copy-target" style="font-size:1.1rem;" title="${n}">${parts.join(".")}</strong>`;
-    }
+	static getFormattedResultNode(retVal, key) {
+		let returnKey = 'result';
+		if (key && key !== null && key !== 'null' && typeof key === 'string') {
+			returnKey = key;
+		}
+		let formatted = '';
+		switch (retVal.type) {
+			case DappLib.DAPP_RESULT_BIG_NUMBER:
+				formatted = DappLib.formatNumber(
+					retVal[returnKey].toString(10)
+				);
+				break;
+			case DappLib.DAPP_RESULT_TX_HASH:
+				formatted = DappLib.formatTxHash(retVal[returnKey]);
+				break;
+			case DappLib.DAPP_RESULT_ACCOUNT:
+				formatted = DappLib.formatAccount(retVal[returnKey]);
+				break;
+			case DappLib.DAPP_RESULT_BOOLEAN:
+				formatted = DappLib.formatBoolean(retVal[returnKey]);
+				break;
+			case DappLib.DAPP_RESULT_IPFS_HASH_ARRAY:
+				formatted = DappLib.formatArray(
+					retVal[returnKey],
+					['TxHash', 'IpfsHash', 'Text-10-5'], //Formatter
+					['Transaction', 'IPFS URL', 'Doc Id'], //Label
+					['transactionHash', 'ipfsHash', 'docId'] //Values
+				);
+				break;
+			case DappLib.DAPP_RESULT_SIA_HASH_ARRAY:
+				formatted = DappLib.formatArray(
+					retVal[returnKey],
+					['TxHash', 'SiaHash', 'Text-10-5'], //Formatter
+					['Transaction', 'Sia URL', 'Doc Id'], //Label
+					['transactionHash', 'docId', 'docId'] //Values
+				);
+				break;
+			case DappLib.DAPP_RESULT_ARRAY:
+				formatted = DappLib.formatArray(
+					retVal[returnKey],
+					retVal.formatter ? retVal.formatter : ['Text'],
+					null,
+					null
+				);
+				break;
+			case DappLib.DAPP_RESULT_STRING:
+				formatted = DappLib.formatPlain(retVal[returnKey]);
+				break;
+			case DappLib.DAPP_RESULT_OBJECT:
+				formatted = DappLib.formatObject(retVal[returnKey]);
+				break;
+			default:
+				formatted = retVal[returnKey];
+				break;
+		}
 
-    static formatAccount(a) {
-        return `<strong class="green accent-1 p-1 blue-grey-text number copy-target" title="${a}">${DappLib.toCondensed(a, 6, 4)}</strong>${DappLib.addClippy(a)}`;
-    }
+		let resultNode = document.createElement('div');
+		resultNode.className = `note text-xs ${
+			retVal.type === DappLib.DAPP_RESULT_ERROR
+				? 'bg-red-400'
+				: 'bg-green-400'
+		} m-3 p-3`;
+		let closeMarkup =
+			'<div class="float-right" onclick="this.parentNode.parentNode.removeChild(this.parentNode)" title="Dismiss" class="text-right mb-1 mr-2" style="cursor:pointer;">X</div>';
+		resultNode.innerHTML =
+			closeMarkup +
+			`${retVal.type === DappLib.DAPP_RESULT_ERROR ? '☹️' : '👍️'} ` +
+			(Array.isArray(retVal[returnKey]) ? 'Result' : retVal.label) +
+			': ' +
+			formatted +
+			DappLib.formatHint(retVal.hint);
+		// Wire-up clipboard copy
+		new ClipboardJS('.copy-target', {
+			text: function (trigger) {
+				return trigger.getAttribute('data-copy');
+			},
+		});
 
-    static formatTxHash(a) {
-        let value = DappLib.getTransactionHash(a);
-        return `<strong class="teal lighten-5 p-1 blue-grey-text number copy-target" title="${value}">${DappLib.toCondensed(value, 6, 4)}</strong>${DappLib.addClippy(value)}`;
-    }
+		return resultNode;
+	}
 
-    static formatBoolean(a) {
-        return (a ? 'YES' : 'NO');
-    }
+	static getObjectNamedProperties(a) {
+		let reg = new RegExp('^\\d+$'); // only digits
+		let newObj = {};
+		for (let key in a) {
+			if (!reg.test(key)) {
+				newObj[key] = a[key];
+			}
+		}
+		return newObj;
+	}
 
-    static formatText(a, copyText) {
-        if (!a) { return; }
-        if (a.startsWith('<')) {
-            return a;
-        }
-        return `<span class="copy-target" title="${copyText ? copyText : a}">${a}</span>${DappLib.addClippy(copyText ? copyText : a)}`;
-    }
-
-    static formatStrong(a) {
-        return `<strong>${a}</strong>`;
-    }
-
-    static formatPlain(a) {
-        return a;
-    }
-
-    static formatObject(a) {
-        let data = [];
-        let labels = ['Item', 'Value'];
-        let keys = ['item', 'value'];
-        let formatters = ['Strong', 'Text-20-5']; // 'Strong': Bold, 'Text-20-5': Compress a 20 character long string down to 5
-        let reg = new RegExp('^\\d+$'); // only digits
-        for (let key in a) {
-            if (!reg.test(key)) {
-                data.push({
-                    item: key.substr(0, 1).toUpperCase() + key.substr(1),
-                    value: a[key]
-                });
-            }
-        }
-        return DappLib.formatArray(data, formatters, labels, keys);
-    }
-
-    static formatArray(h, dataFormatters, dataLabels, dataKeys) {
-
-        let output = '<table class="table table-striped">';
-
-        if (dataLabels) {
-            output += '<thead><tr>';
-            for (let d = 0; d < dataLabels.length; d++) {
-                output += `<th scope="col">${dataLabels[d]}</th>`;
-            }
-            output += '</tr></thead>';
-        }
-        output += '<tbody>';
-        h.map((item) => {
-            output += '<tr>';
-            for (let d = 0; d < dataFormatters.length; d++) {
-                let text = String(dataKeys && dataKeys[d] ? item[dataKeys[d]] : item);
-                let copyText = dataKeys && dataKeys[d] ? item[dataKeys[d]] : item;
-                if (text.startsWith('<')) {
-                    output += (d == 0 ? '<th scope="row">' : '<td>') + text + (d == 0 ? '</th>' : '</td>');
-                } else {
-                    let formatter = 'format' + dataFormatters[d];
-                    if (formatter.startsWith('formatText')) {
-                        let formatterFrags = formatter.split('-');
-                        if (formatterFrags.length === 3) {
-                            text = DappLib.toCondensed(text, Number(formatterFrags[1]), Number(formatterFrags[2]));
-                        } else if (formatterFrags.length === 2) {
-                            text = DappLib.toCondensed(text, Number(formatterFrags[1]));
-                        }
-                        formatter = formatterFrags[0];
-                    }
-                    output += (d == 0 ? '<th scope="row">' : '<td>') + DappLib[formatter](text, copyText) + (d == 0 ? '</th>' : '</td>');
-                }
-            }
-            output += '</tr>';
-        })
-        output += '</tbody></table>';
-        return output;
-    }
-
-    static getFormattedResultNode(retVal, key) {
-
-        let returnKey = 'result';
-        if (key && (key !== null) && (key !== 'null') && (typeof (key) === 'string')) {
-            returnKey = key;
-        }
-        let formatted = '';
-        switch (retVal.type) {
-            case DappLib.DAPP_RESULT_BIG_NUMBER:
-                formatted = DappLib.formatNumber(retVal[returnKey].toString(10));
-                break;
-            case DappLib.DAPP_RESULT_TX_HASH:
-                formatted = DappLib.formatTxHash(retVal[returnKey]);
-                break;
-            case DappLib.DAPP_RESULT_ACCOUNT:
-                formatted = DappLib.formatAccount(retVal[returnKey]);
-                break;
-            case DappLib.DAPP_RESULT_BOOLEAN:
-                formatted = DappLib.formatBoolean(retVal[returnKey]);
-                break;
-            case DappLib.DAPP_RESULT_IPFS_HASH_ARRAY:
-                formatted = DappLib.formatArray(
-                    retVal[returnKey],
-                    ['TxHash', 'IpfsHash', 'Text-10-5'], //Formatter
-                    ['Transaction', 'IPFS URL', 'Doc Id'], //Label
-                    ['transactionHash', 'ipfsHash', 'docId'] //Values
-                );
-                break;
-            case DappLib.DAPP_RESULT_SIA_HASH_ARRAY:
-                formatted = DappLib.formatArray(
-                    retVal[returnKey],
-                    ['TxHash', 'SiaHash', 'Text-10-5'], //Formatter
-                    ['Transaction', 'Sia URL', 'Doc Id'], //Label
-                    ['transactionHash', 'docId', 'docId'] //Values
-                );
-                break;
-            case DappLib.DAPP_RESULT_ARRAY:
-                formatted = DappLib.formatArray(
-                    retVal[returnKey],
-                    retVal.formatter ? retVal.formatter : ['Text'],
-                    null,
-                    null
-                );
-                break;
-            case DappLib.DAPP_RESULT_STRING:
-                formatted = DappLib.formatPlain(
-                    retVal[returnKey]
-                );
-                break;
-            case DappLib.DAPP_RESULT_OBJECT:
-                formatted = DappLib.formatObject(retVal[returnKey]);
-                break;
-            default:
-                formatted = retVal[returnKey];
-                break;
-        }
-
-        let resultNode = document.createElement('div');
-        resultNode.className = `note text-xs ${retVal.type === DappLib.DAPP_RESULT_ERROR ? 'bg-red-400' : 'bg-green-400'} m-3 p-3`;
-        let closeMarkup = '<div class="float-right" onclick="this.parentNode.parentNode.removeChild(this.parentNode)" title="Dismiss" class="text-right mb-1 mr-2" style="cursor:pointer;">X</div>';
-        resultNode.innerHTML = `<span class='text-xl break-words'>${closeMarkup} ${retVal.type === DappLib.DAPP_RESULT_ERROR ? '☹️' : '👍️'} ${(Array.isArray(retVal[returnKey]) ? 'Result' : retVal.label)} : ${formatted} ${DappLib.formatHint(retVal.hint)}</span>`
-        // Wire-up clipboard copy
-        new ClipboardJS('.copy-target', {
-            text: function (trigger) {
-                return trigger.getAttribute('data-copy');
-            }
-        });
-
-        return resultNode;
-    }
-
-    static getObjectNamedProperties(a) {
-        let reg = new RegExp('^\\d+$'); // only digits
-        let newObj = {};
-        for (let key in a) {
-            if (!reg.test(key)) {
-                newObj[key] = a[key];
-            }
-        }
-        return newObj;
-    }
-
-    static addClippy(data) {
-        return `
+	static addClippy(data) {
+		return `
         <svg data-copy="${data}" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
              viewBox="0 0 22.1 23.5" style="enable-background:new 0 0 22.1 23.5;cursor:pointer;" class="copy-target" width="19px" height="20.357px" xml:space="preserve">
         <style type="text/css">
@@ -812,134 +1138,139 @@ module.exports = class DappLib {
             S7.4,5.2,6.6,5.2H5.3C4.5,5.2,3.9,5.8,3.9,6.5z"/>
         </svg>
         `;
-    }
+	}
 
-    static getAccounts() {
-        let accounts = dappConfig.accounts;
-        return accounts;
-    }
+	static getAccounts() {
+		let accounts = dappConfig.accounts;
+		return accounts;
+	}
 
-    static fromAscii(str, padding) {
+	static fromAscii(str, padding) {
+		if (Array.isArray(str)) {
+			return DappLib.arrayToHex(str);
+		}
 
-        if (Array.isArray(str)) {
-            return DappLib.arrayToHex(str);
-        }
+		if (str.startsWith('0x') || !padding) {
+			return str;
+		}
 
-        if (str.startsWith('0x') || !padding) {
-            return str;
-        }
+		if (str.length > padding) {
+			str = str.substr(0, padding);
+		}
 
-        if (str.length > padding) {
-            str = str.substr(0, padding);
-        }
+		var hex = '0x';
+		for (var i = 0; i < str.length; i++) {
+			var code = str.charCodeAt(i);
+			var n = code.toString(16);
+			hex += n.length < 2 ? '0' + n : n;
+		}
+		return hex + '0'.repeat(padding * 2 - hex.length + 2);
+	}
 
-        var hex = '0x';
-        for (var i = 0; i < str.length; i++) {
-            var code = str.charCodeAt(i);
-            var n = code.toString(16);
-            hex += n.length < 2 ? '0' + n : n;
-        }
-        return hex + '0'.repeat(padding * 2 - hex.length + 2);
-    };
+	static toAscii(hex) {
+		var str = '',
+			i = 0,
+			l = hex.length;
+		if (hex.substring(0, 2) === '0x') {
+			i = 2;
+		}
+		for (; i < l; i += 2) {
+			var code = parseInt(hex.substr(i, 2), 16);
+			if (code === 0) continue; // this is added
+			str += String.fromCharCode(code);
+		}
+		return str;
+	}
 
+	static arrayToHex(bytes) {
+		if (Array.isArray(bytes)) {
+			return (
+				'0x' +
+				Array.prototype.map
+					.call(bytes, function (byte) {
+						return ('0' + (byte & 0xff).toString(16)).slice(-2);
+					})
+					.join('')
+			);
+		} else {
+			return bytes;
+		}
+	}
 
-    static toAscii(hex) {
-        var str = '',
-            i = 0,
-            l = hex.length;
-        if (hex.substring(0, 2) === '0x') {
-            i = 2;
-        }
-        for (; i < l; i += 2) {
-            var code = parseInt(hex.substr(i, 2), 16);
-            if (code === 0) continue; // this is added
-            str += String.fromCharCode(code);
-        }
-        return str;
-    };
+	static hexToArray(hex) {
+		if (typeof hex === 'string' && hex.beginsWith('0x')) {
+			let bytes = [];
+			for (let i = 0; i < hex.length; i += 2) {
+				bytes.push(parseInt(hex.substr(i, 2), 16));
+			}
+			return bytes;
+		} else {
+			return hex;
+		}
+	}
 
-    static arrayToHex(bytes) {
-        if (Array.isArray(bytes)) {
-            return '0x' +
-                Array.prototype.map.call(bytes, function (byte) {
-                    return ('0' + (byte & 0xFF).toString(16)).slice(-2);
-                }).join('')
-        } else {
-            return bytes;
-        }
-    }
+	static toCondensed(s, begin, end) {
+		if (!s) {
+			return;
+		}
+		if (s.length && s.length <= begin + end) {
+			return s;
+		} else {
+			if (end) {
+				return `${s.substr(0, begin)}...${s.substr(
+					s.length - end,
+					end
+				)}`;
+			} else {
+				return `${s.substr(0, begin)}...`;
+			}
+		}
+	}
 
-    static hexToArray(hex) {
-        if ((typeof hex === 'string') && (hex.beginsWith('0x'))) {
-            let bytes = [];
-            for (let i = 0; i < hex.length; i += 2) {
-                bytes.push(parseInt(hex.substr(i, 2), 16));
-            }
-            return bytes;
-        } else {
-            return hex;
-        }
-    }
+	static getManifest() {
+		return manifest;
+	}
 
-    static toCondensed(s, begin, end) {
-        if (!s) { return; }
-        if (s.length && s.length <= begin + end) {
-            return s;
-        } else {
-            if (end) {
-                return `${s.substr(0, begin)}...${s.substr(s.length - end, end)}`;
-            } else {
-                return `${s.substr(0, begin)}...`;
-            }
-        }
-    }
+	// https://stackoverflow.com/questions/105034/create-guid-uuid-in-javascript
+	static getUniqueId() {
+		return 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'.replace(
+			/[x]/g,
+			function (c) {
+				var r = (Math.random() * 16) | 0,
+					v = c == 'x' ? r : (r & 0x3) | 0x8;
+				return v.toString(16);
+			}
+		);
+	}
 
-    static getManifest() {
-        return manifest;
-    }
+	static getConfig() {
+		return dappConfig;
+	}
 
-    // https://stackoverflow.com/questions/105034/create-guid-uuid-in-javascript
-    static getUniqueId() {
-        return 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'.replace(/[x]/g, function (c) {
-            var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
-            return v.toString(16);
-        });
-    }
-
-    static getConfig() {
-        return dappConfig;
-    }
-
-    // Return value of this function is used to dynamically re-define getConfig()
-    // for use during testing. With this approach, even though getConfig() is static
-    // it returns the correct contract addresses as its definition is re-written
-    // before each test run. Look for the following line in test scripts to see it done:
-    //  DappLib.getConfig = Function(`return ${ JSON.stringify(DappLib.getTestConfig(testDappStateContract, testDappContract, testAccounts))}`);
-    static getTestConfig(testDappStateContract, testDappContract, testAccounts) {
-
-        return Object.assign(
-            {},
-            dappConfig,
-            {
-                dappStateContractAddress: testDappStateContract.address,
-                dappContractAddress: testDappContract.address,
-                accounts: testAccounts,
-                owner: testAccounts[0],
-                admins: [
-                    testAccounts[1],
-                    testAccounts[2],
-                    testAccounts[3]
-                ],
-                users: [
-                    testAccounts[4],
-                    testAccounts[5],
-                    testAccounts[6],
-                    testAccounts[7],
-                    testAccounts[8]
-                ]
-                ///+test
-            }
-        );
-    }
-
-}
+	// Return value of this function is used to dynamically re-define getConfig()
+	// for use during testing. With this approach, even though getConfig() is static
+	// it returns the correct contract addresses as its definition is re-written
+	// before each test run. Look for the following line in test scripts to see it done:
+	//  DappLib.getConfig = Function(`return ${ JSON.stringify(DappLib.getTestConfig(testDappStateContract, testDappContract, testAccounts))}`);
+	static getTestConfig(
+		testDappStateContract,
+		testDappContract,
+		testAccounts
+	) {
+		return Object.assign({}, dappConfig, {
+			dappStateContractAddress: testDappStateContract.address,
+			dappContractAddress: testDappContract.address,
+			accounts: testAccounts,
+			owner: testAccounts[0],
+			admins: [testAccounts[1], testAccounts[2], testAccounts[3]],
+			users: [
+				testAccounts[4],
+				testAccounts[5],
+				testAccounts[6],
+				testAccounts[7],
+				testAccounts[8],
+			],
+			///+test
+		});
+	}
+};
