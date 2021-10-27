@@ -45,6 +45,14 @@ export default class HarnessPage extends LitElement {
 				category: 'Foundations',
 				route: '/core-pack_nft',
 			},
+			{
+				name: 'core-testnet',
+				title: 'Beast NFT [Testnet]',
+				description:
+					'Beast NFTs (similar to NBA Top Shot and CryptoKitties).',
+				category: 'Foundations',
+				route: '/core-testnet',
+			},
 		];
 	}
 
