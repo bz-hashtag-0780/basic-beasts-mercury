@@ -763,6 +763,56 @@ module.exports = class DappLib {
 		};
 	}
 
+	//  basicBeastGetNextEvolutionSetID
+	// calls scripts/basicbeast/sets/get_next_evolutionSetID.cdc
+	//
+	// signer/proposer/authorizer: data.signer
+	//
+	static async basicBeastGetNextEvolutionSetID(data) {
+		let result = await Blockchain.get(
+			{
+				config: DappLib.getConfig(),
+				roles: {
+					proposer: data.signer,
+				},
+			},
+			'basicbeast_sets_get_next_evolutionSetID',
+			{}
+		);
+
+		console.log(result);
+
+		return {
+			type: DappLib.DAPP_RESULT_BIG_NUMBER,
+			label: 'The current generation is',
+			result: result.callData,
+		};
+	}
+
+	//  basicBeastGetNextBeastTemplateID
+	// calls scripts/basicbeast/beastTemplates/get_next_beastTemplateID.cdc
+	//
+	// signer/proposer/authorizer: data.signer
+	//
+	static async basicBeastGetNextBeastTemplateID(data) {
+		let result = await Blockchain.get(
+			{
+				config: DappLib.getConfig(),
+				roles: {
+					proposer: data.signer,
+				},
+			},
+			'basicbeast_get_next_beastTemplateID',
+			{}
+		);
+
+		return {
+			type: DappLib.DAPP_RESULT_BIG_NUMBER,
+			label: 'The next beastTemplate is',
+			result: result.callData,
+		};
+	}
+
 	/*
       data - an object of key value pairs
       ex. { number: 2, id: 15 }

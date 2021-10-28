@@ -18,7 +18,8 @@
         "clean": "rimraf -rf build && rimraf -rf dist",
         "deploy": "node src/rhythm deploy",
         "dev": "node src/rhythm",
-        "test": "node src/rhythm test"
+        "test": "node src/rhythm test",
+        "testnet": "node src/rhythm testnet"
     },
     "bugs": {
         "url": "https://github.com/trycrypto/dappstarter-lerna/issues"
