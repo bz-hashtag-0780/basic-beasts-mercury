@@ -77,7 +77,7 @@ export default class DictionaryWidget extends LitElement {
 		let content = html`
 			<div
 				class="input-group mb-3 bg-gray-300 p-5"
-				title="dictionary-widget"
+				title="dictionary-widget-${this.field}"
 			>
 				<h1
 					class="bg-gray-200 p-2 block rounded rounded-r-none text-gray-500"
