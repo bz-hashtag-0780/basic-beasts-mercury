@@ -132,17 +132,17 @@ export default class TestnetHarness extends LitElement {
 					<text-widget
 						field="dexNumber"
 						label="Dex number"
-						placeholder="9"
+						placeholder="13"
 					></text-widget>
 					<text-widget
 						field="name"
 						label="Name"
-						placeholder="Willi Blue"
+						placeholder="Teddy"
 					></text-widget>
 					<text-widget
 						field="image"
 						label="Image"
-						placeholder="Image url Standard for OpenSea"
+						placeholder="Image url"
 					></text-widget>
 					<text-widget
 						field="description"
@@ -167,32 +167,32 @@ export default class TestnetHarness extends LitElement {
 					<text-widget
 						field="asexual"
 						label="Asexual"
-						placeholder="true"
+						placeholder="false"
 					></text-widget>
 					<text-widget
 						field="ultimateSkill"
 						label="Ultimate Skill"
-						placeholder="Silent fart"
+						placeholder="Hyper Room"
 					></text-widget>
 					<array-widget
 						field="basicSkills"
 						label="Basic Skills"
 						valueLabel="Basic Skill"
-						placeholder="Fart"
+						placeholder="Silent Fart"
 					></array-widget>
 					<dictionary-widget
 						field="elements"
 						label="Elements"
 						objectLabel="Element Object"
 						keyplaceholder="Element Name"
-						valueplaceholder="false"
+						valueplaceholder="true"
 					></dictionary-widget>
 					<dictionary-widget
 						field="data"
 						label="Data"
 						objectLabel="Data Object"
-						keyplaceholder="Jacob"
-						valueplaceholder="Rocks"
+						keyplaceholder="Video"
+						valueplaceholder="Video url"
 					></dictionary-widget>
 				</action-card>
 

@@ -160,8 +160,8 @@ export default class PackNFTHarness extends LitElement {
 						field="data"
 						label="Data"
 						objectLabel="Data Object"
-						keyplaceholder="Jacob"
-						valueplaceholder="Rocks"
+						keyplaceholder="Video"
+						valueplaceholder="Link"
 					></dictionary-widget>
 				</action-card>
 
