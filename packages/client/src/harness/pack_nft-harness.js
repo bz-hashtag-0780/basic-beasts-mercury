@@ -213,9 +213,9 @@ export default class PackNFTHarness extends LitElement {
 					></text-widget>
 				</action-card>
 
-				<!-- 9 ADD BEASTTEMPLATE IN EVOLUTIONSET (POST) -->
+				<!-- 9 ADD BEASTTEMPLATE TO EVOLUTIONSET (POST) -->
 				<action-card
-					title="9 Add BeastTemplate In EvolutionSet"
+					title="9 Add BeastTemplate To EvolutionSet"
 					description=""
 					action="basicBeastAddBeastTemplateToEvolutionSet"
 					method="post"

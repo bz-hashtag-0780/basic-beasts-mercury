@@ -75,12 +75,8 @@ export default class TestnetHarness extends LitElement {
 					description="Setup account to handle Beast NFTs"
 					action="basicBeastSetupAccount"
 					method="post"
-					fields="signer"
 				>
-					<account-widget
-						field="signer"
-						label="Signer"
-					></account-widget>
+				<div>Signer is logged in Address: ${this.user ? this.user.addr : null}</div>
 				</action-card>
 
 				<!-- 2 CREATE EVOLUTIONSET (POST) -->
@@ -89,12 +85,10 @@ export default class TestnetHarness extends LitElement {
 					description="Create an EvolutionSet for Basic Beasts. *Only admin."
 					action="basicBeastCreateEvolutionSet"
 					method="post"
-					fields="signer setName"
+					fields="setName"
 				>
-					<account-widget
-						field="signer"
-						label="Signer"
-					></account-widget>
+				<div>Signer is logged in Address: ${this.user ? this.user.addr : null}</div>
+				<br/>
 					<text-widget
 						field="setName"
 						label="EvolutionSet Name"
@@ -123,12 +117,10 @@ export default class TestnetHarness extends LitElement {
 					description="Enter the required fields to create a BeastTemplate. *Only admin."
 					action="basicBeastCreateBeastTemplate"
 					method="post"
-					fields="signer dexNumber name image description rarity skin starLevel asexual ultimateSkill basicSkills elements data"
+					fields="dexNumber name image description rarity skin starLevel asexual ultimateSkill basicSkills elements data"
 				>
-					<account-widget
-						field="signer"
-						label="Signer"
-					></account-widget>
+				<div>Signer is logged in Address: ${this.user ? this.user.addr : null}</div>
+				<br/>
 					<text-widget
 						field="dexNumber"
 						label="Dex number"
@@ -244,19 +236,17 @@ export default class TestnetHarness extends LitElement {
 					></text-widget>
 				</action-card>
 
-				<!-- 9 ADD BEASTTEMPLATE IN EVOLUTIONSET (POST) -->
+				<!-- 9 ADD BEASTTEMPLATE TO EVOLUTIONSET (POST) -->
 				<action-card
-					title="9 Add BeastTemplate In EvolutionSet"
-					description=""
+					title="9 Add BeastTemplate To EvolutionSet"
+					description="Add BeastTemplate to EvolutionSet. *Only admin"
 					action="basicBeastAddBeastTemplateToEvolutionSet"
 					method="post"
-					fields="signer setID beastTemplateID"
+					fields="setID beastTemplateID"
 				>
 
-				<account-widget
-						field="signer"
-						label="Signer"
-					></account-widget>
+				<div>Signer is logged in Address: ${this.user ? this.user.addr : null}</div>
+				<br/>
 				<text-widget
 						field="setID"
 						label="Set ID"
@@ -276,13 +266,11 @@ export default class TestnetHarness extends LitElement {
 					description=""
 					action="basicBeastAddBeastTemplatesToEvolutionSet"
 					method="post"
-					fields="signer setID beastTemplateID"
+					fields="setID beastTemplateID"
 				>
 
-				<account-widget
-						field="signer"
-						label="Signer"
-					></account-widget>
+				<div>Signer is logged in Address: ${this.user ? this.user.addr : null}</div>
+				<br/>
 				<text-widget
 						field="setID"
 						label="Set ID"
@@ -319,12 +307,10 @@ export default class TestnetHarness extends LitElement {
 					description="Enter the setID for EvolutionSet and the BeastTemplateID you want to remove."
 					action="basicBeastRemoveBeastTemplateFromEvolutionSet"
 					method="post"
-					fields="signer setID beastTemplateID"
+					fields="setID beastTemplateID"
 				>
-				<account-widget
-						field="signer"
-						label="Signer"
-					></account-widget>
+				<div>Signer is logged in Address: ${this.user ? this.user.addr : null}</div>
+				<br/>
 					<text-widget
 						field="setID"
 						label="setID"
@@ -343,12 +329,10 @@ export default class TestnetHarness extends LitElement {
 					description="Enter the setID for EvolutionSet you want to empty."
 					action="basicBeastRemoveAllBeastTemplatesFromEvolutionSet"
 					method="post"
-					fields="signer setID"
+					fields="setID"
 				>
-				<account-widget
-						field="signer"
-						label="Signer"
-					></account-widget>
+				<div>Signer is logged in Address: ${this.user ? this.user.addr : null}</div>
+				<br/>
 					<text-widget
 						field="setID"
 						label="setID"
@@ -362,12 +346,10 @@ export default class TestnetHarness extends LitElement {
 					description="Enter the required fields to mint a Beast."
 					action="basicBeastMintBeast"
 					method="post"
-					fields="signer setID beastTemplateID matron sire evolvedFrom recipientAddr"
+					fields="setID beastTemplateID matron sire evolvedFrom recipientAddr"
 				>
-				<account-widget
-						field="signer"
-						label="Signer"
-					></account-widget>
+				<div>Signer is logged in Address: ${this.user ? this.user.addr : null}</div>
+				<br/>
 					<text-widget
 						field="setID"
 						label="setID"
@@ -406,12 +388,10 @@ export default class TestnetHarness extends LitElement {
 					description="Mint a specific Beast x times."
 					action="basicBeastBatchMintBeast"
 					method="post"
-					fields="signer setID beastTemplateID matron sire evolvedFrom quantity recipientAddr"
+					fields="setID beastTemplateID matron sire evolvedFrom quantity recipientAddr"
 				>
-				<account-widget
-						field="signer"
-						label="Signer"
-					></account-widget>
+				<div>Signer is logged in Address: ${this.user ? this.user.addr : null}</div>
+				<br/>
 					<text-widget
 						field="setID"
 						label="setID"
@@ -497,12 +477,10 @@ export default class TestnetHarness extends LitElement {
 					description="Lock an EvolutionSet so BeastTemplates cannot be added to it anymore. *Only admin"
 					action="basicBeastLockEvolutionSet"
 					method="post"
-					fields="signer setID"
+					fields="setID"
 				>
-					<account-widget
-						field="signer"
-						label="Signer"
-					></account-widget>
+				<div>Signer is logged in Address: ${this.user ? this.user.addr : null}</div>
+				<br/>
 					<text-widget
 						field="setID"
 						label="setID"
@@ -516,12 +494,10 @@ export default class TestnetHarness extends LitElement {
 					description="Enter the BeastTemplateID and the EvolutionSet prevent minting in the future. *Only admin"
 					action="basicBeastRetireBeastTemplateFromEvolutionSet"
 					method="post"
-					fields="signer setID beastTemplateID"
+					fields="setID beastTemplateID"
 				>
-					<account-widget
-						field="signer"
-						label="Signer"
-					></account-widget>
+				<div>Signer is logged in Address: ${this.user ? this.user.addr : null}</div>
+				<br/>
 					<text-widget
 						field="setID"
 						label="setID"
@@ -540,12 +516,10 @@ export default class TestnetHarness extends LitElement {
 					description="Enter the EvolutionSet to retire all the BeastTemplates in it. *Only admin"
 					action="basicBeastRetireAllBeastTemplatesFromEvolutionSet"
 					method="post"
-					fields="signer setID"
+					fields="setID"
 				>
-					<account-widget
-						field="signer"
-						label="Signer"
-					></account-widget>
+				<div>Signer is logged in Address: ${this.user ? this.user.addr : null}</div>
+				<br/>
 					<text-widget
 						field="setID"
 						label="setID"
@@ -559,12 +533,10 @@ export default class TestnetHarness extends LitElement {
 					description="Enter the EvolutionSet to retire all the BeastTemplates in it. *Only admin"
 					action="basicBeastStartNewGeneration"
 					method="post"
-					fields="signer"
+					fields=""
 				>
-					<account-widget
-						field="signer"
-						label="Signer"
-					></account-widget>
+				<div>Signer is logged in Address: ${this.user ? this.user.addr : null}</div>
+				<br/>
 				</action-card>
 
 				<!-- 23 GET CURRENT GENERATION (POST) -->
@@ -582,12 +554,10 @@ export default class TestnetHarness extends LitElement {
 					description=""
 					action="basicBeastDepositBeastNft"
 					method="post"
-					fields="signer recipientAddr beastID"
+					fields="recipientAddr beastID"
 				>
-				<account-widget
-					field="signer"
-					label="signer"
-				></account-widget>
+				<div>Signer is logged in Address: ${this.user ? this.user.addr : null}</div>
+				<br/>
 					<account-widget
 					field="recipientAddr"
 					label="recipientAddr"
@@ -605,13 +575,11 @@ export default class TestnetHarness extends LitElement {
 					description=""
 					action="basicBeastDepositBeastNfts"
 					method="post"
-					fields="signer recipientAddr beastIDs"
+					fields="recipientAddr beastIDs"
 				>
 
-				<account-widget
-					field="signer"
-					label="signer"
-				></account-widget>
+				<div>Signer is logged in Address: ${this.user ? this.user.addr : null}</div>
+
 					<account-widget
 					field="recipientAddr"
 					label="recipientAddr"
