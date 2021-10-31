@@ -1,4 +1,4 @@
-# My Dapp
+# My Dapp for Mercury Hackathon
 
 This project is for the blockchain application My Dapp. It contains code for the Smart Contract, web-based dapp and NodeJS server. 
 
@@ -27,10 +27,13 @@ These failures occur because the node-gyp package requires certain additional bu
 to be installed on your computer. Follow the [instructions](https://www.npmjs.com/package/node-gyp) for adding build tools and then try running `yarn` again.
 
 # Build, Deploy and Test
-Using a terminal (or command prompt), change to the folder containing the project files and type: `yarn start` This will run all the dev scripts in each project package.json.
+Using a terminal (or command prompt): 
+
+Run `yarn start` to use the emmulator module
+
+Run `yarn testnet` to use the testnet module
 
 Run `yarn test` to run all unit tests for this project.
-
 
 
 ## File Locations
